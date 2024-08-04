@@ -16,4 +16,3 @@ def fetch_data(collection):
 
 rag = RAG()
 phones_data = fetch_data(rag.collection)
-

@@ -1,10 +1,10 @@
 import os
 import streamlit as st
-from dotenv import load_dotenv
+# from dotenv import load_dotenv
 from function_calling import search_phone_by_rules, search_phone_info_by_name, model, available_tools
 import google.generativeai as genai
 
-load_dotenv()
+# load_dotenv()
 
 # Streamlit app title
 st.set_page_config(page_title="Hedspi Phone Store", page_icon=":iphone:")
