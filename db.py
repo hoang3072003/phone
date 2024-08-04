@@ -1,5 +1,5 @@
 import os
-from dotenv import load_dotenv
+# from dotenv import load_dotenv
 from RAG import RAG
 def fetch_data(collection):
     data = collection.find({})  

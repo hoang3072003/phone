@@ -16,7 +16,9 @@ def get_mongo_client(mongo_uri):
     except pymongo.errors.ConnectionFailure as e:
         print(f"Connection failed: {e}")
         return None
-client = get_mongo_client(os.environ["MONGODB_URI"])
+# client = get_mongo_client(os.environ["MONGODB_URI"])
+client = get_mongo_client("mongodb+srv://nguyenducphuchoanghust:S3wIZkZrLbLSZPJO@clusterhoangha.ppebs8w.mongodb.net/")
+
 
 def get_embedding(text: str) -> list[float]:
     if not text.strip():
@@ -29,8 +31,8 @@ def get_embedding(text: str) -> list[float]:
     return embedding.tolist()
 
 class RAG:
-    def __init__(self, db_name=os.environ["DB_NAME"], collection_name=os.environ["DB_COLLECTION"]):
-        if not os.environ["MONGODB_URI"]:
+    def __init__(self, db_name="DatabaseHoangHa", collection_name="HoangHaphoneembed"):
+        if not "mongodb+srv://nguyenducphuchoanghust:S3wIZkZrLbLSZPJO@clusterhoangha.ppebs8w.mongodb.net/":
             raise ValueError("MongoDB URI is missing")
         self.client = client
         self.db = self.client[db_name]
