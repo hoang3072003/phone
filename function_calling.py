@@ -135,9 +135,9 @@ available_tools = {
     "search_phone_info_by_name": search_phone_info_by_name,
     "search_phone_by_rules": search_phone_by_rules,
 }
-api_key = os.getenv("API_KEY")
-genai.configure(api_key=api_key)  
-
+# api_key = os.getenv("API_KEY")
+# genai.configure(api_key=api_key)  
+genai.configure(api_key="AIzaSyDCSICwl5CCqffQnW13XkaG6E3f5--8jus")  
 model = genai.GenerativeModel(
     model_name="gemini-1.5-flash",
     tools=tools,
