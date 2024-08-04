@@ -10,3 +10,4 @@ transformers
 torch
 accelerate
 faiss-cpu
+sentence_transformers
