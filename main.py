@@ -1,10 +1,8 @@
 import os
 import streamlit as st
-# from dotenv import load_dotenv
-from function_calling import search_phone_by_rules, search_phone_info_by_name, model, available_tools
+from function_calling import search_phone_by_rules, search_phone_info_by_name, model, available_tools1
+from query_process import classification_query
 import google.generativeai as genai
-
-# load_dotenv()
 
 # Streamlit app title
 st.set_page_config(page_title="Hedspi Phone Store", page_icon=":iphone:")
@@ -39,7 +37,10 @@ with col2:
 for i, message in enumerate(st.session_state.messages):
     if message["role"] == "user":
         with st.chat_message(message["role"]):
-            st.write(st.session_state.query_list[i])
+            if i-1 < len(st.session_state.query_list):
+                st.write(st.session_state.query_list[i-1])
+            else:
+                st.write(message["content"])
     elif message["role"] != "system":
         with st.chat_message(message["role"]):
             st.write(message["content"])
@@ -50,51 +51,64 @@ if prompt := st.chat_input("Bạn cần chúng tôi hỗ trợ gì?"):
     with st.chat_message("user"):
         st.session_state.query_list.append(prompt)
         st.markdown(prompt)
+    
+    st.session_state.messages.append({"role": "user", "content": prompt})
 
-    # Gửi tin nhắn của người dùng cho chatbot và nhận phản hồi
-    response = st.session_state.chat.send_message(prompt)
+    is_needRAG = True   
+    # classification_query([prompt])
 
-    while True:
-        # Tạo dictionary để lưu trữ kết quả từ các hàm
-        responses = {}
+    if is_needRAG:
+        response = st.session_state.chat.send_message(prompt)
+        while True:
+            # Tạo dictionary để lưu trữ kết quả từ các hàm
+            responses = {}
 
-        # Xử lý từng phần của phản hồi từ chatbot
-        for part in response.parts:
-            # Kiểm tra xem phần phản hồi có chứa yêu cầu gọi hàm hay không
-            if fn := part.function_call:
-                function_name = fn.name
-                function_args = ", ".join(f"{key}={val}" for key, val in fn.args.items())
+            # Xử lý từng phần của phản hồi từ chatbot
+            for part in response.parts:
+                print(1)
+                # Kiểm tra xem phần phản hồi có chứa yêu cầu gọi hàm hay không
+                if fn := part.function_call:
+                    function_name = fn.name
+                    function_args = ", ".join(f"{key}={val}" for key, val in fn.args.items())
+                    print(function_name,function_args)
+                    # Lấy hàm tương ứng từ available_tools
+                    function_to_call = available_tools1[function_name]
 
-                # Lấy hàm tương ứng từ available_tools
-                function_to_call = available_tools[function_name]
+                    # Phân tích chuỗi function_args thành dictionary
+                    function_args_dict = {}
+                    for item in function_args.split(", "):
+                        key, value = item.split("=")
+                        function_args_dict[key.strip()] = value.strip()
 
-                # Phân tích chuỗi function_args thành dictionary
-                function_args_dict = {}
-                for item in function_args.split(", "):
-                    key, value = item.split("=")
-                    function_args_dict[key.strip()] = value.strip()
-
-                # Gọi hàm và lưu kết quả vào dictionary responses
-                function_response = function_to_call(**function_args_dict)
-                responses[function_name] = function_response
-
-        # Nếu có kết quả từ các hàm
-        if responses:
-            # Tạo danh sách các phần phản hồi mới, bao gồm kết quả từ các hàm
-            response_parts = [
-                genai.protos.Part(
-                    function_response=genai.protos.FunctionResponse(
-                        name=fn, response={"result": val}
+                    # Gọi hàm và lưu kết quả vào dictionary responses
+                    function_response = function_to_call(**function_args_dict)
+                    responses[function_name] = function_response
+                else:
+                    print("no functioncalling")
+            # Nếu có kết quả từ các hàm
+            if responses:
+                # Tạo danh sách các phần phản hồi mới, bao gồm kết quả từ các hàm
+                response_parts = [
+                    genai.protos.Part(
+                        function_response=genai.protos.FunctionResponse(
+                            name=fn, response={"result": val}
+                        )
                     )
-                )
-                for fn, val in responses.items()
-            ]
-            # Gửi phản hồi mới (bao gồm kết quả từ các hàm) cho chatbot
-            response = st.session_state.chat.send_message(response_parts)
-        else:
-            break
-
-    # In ra phản hồi cuối cùng từ chatbot
-    with st.chat_message("assistant"):
-        st.write(response.text)
-    st.session_state.messages.append({"role": "assistant", "content": response.text})
+                    for fn, val in responses.items()
+                ]
+                # Gửi phản hồi mới (bao gồm kết quả từ các hàm) cho chatbot
+                response = st.session_state.chat.send_message(response_parts)
+                # response = model.generate_content(response_parts)
+            else:
+                break
+        with st.chat_message("assistant"):
+            st.write(response.text)
+        st.session_state.messages.append({"role": "assistant", "content": response.text})
+    
+    
+    # else:
+    #     response = st.session_state.chat.send_message(prompt)
+    # # In ra phản hồi cuối cùng từ chatbot
+    # with st.chat_message("assistant"):
+    #     st.write(response.text)
+    # st.session_state.messages.append({"role": "assistant", "content": response.text})

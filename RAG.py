@@ -2,6 +2,8 @@ import os
 # from dotenv import load_dotenv
 import pymongo
 from sentence_transformers import SentenceTransformer
+from query_process import get_embedding
+
 
 embedding_model = SentenceTransformer('keepitreal/vietnamese-sbert')
 
@@ -19,16 +21,6 @@ def get_mongo_client(mongo_uri):
 # client = get_mongo_client(os.environ["MONGODB_URI"])
 client = get_mongo_client("mongodb+srv://nguyenducphuchoanghust:S3wIZkZrLbLSZPJO@clusterhoangha.ppebs8w.mongodb.net/")
 
-
-def get_embedding(text: str) -> list[float]:
-    if not text.strip():
-        print("Attempted to get embedding for empty text.")
-        return []
-
-    embedding = embedding_model.encode(text.replace(
-        '###', '').replace('\n', '').replace('<br>', ''))
-
-    return embedding.tolist()
 
 class RAG:
     def __init__(self, db_name="DatabaseHoangHa", collection_name="HoangHaphoneembed"):
@@ -142,7 +134,7 @@ class RAG:
         else:
             prompt_query = query + ". " + \
                 "Hãy trả lời bằng Tiếng Việt dựa trên thông tin các sản phẩm cửa hàng có như sau (Nếu không có thông tin thì hãy đề xuất sản phẩm khác ):"
-            return f"Query: {prompt_query} \n {search_result}.".replace('<br>', '')
+            return f"{search_result}.".replace('<br>', '')
       
 
 
